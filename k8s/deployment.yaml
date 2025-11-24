@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: travelstory-deployment
+  namespace: 2401198
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: travelstory
+  template:
+    metadata:
+      labels:
+        app: travelstory
+    spec:
+      containers:
+        - name: travelstory
+          image: nexus.imcc.com:8082/2401198/travelstory-frontend:v1
+          ports:
+            - containerPort: 80
+        - name: travelstory
+          image: nexus.imcc.com:8082/2401198/travelstory-backend:v1
+          ports:
+            - containerPort: 5000
+          env:
+            - name: MONGO_URL
+              value: "mongodb+srv://vaishnavitapasvi:alohomora@travelstory.7r8gs.mongodb.net/?retryWrites=true&w=majority&appName=travelstory"
+
+            - name: JWT_SECRET
+              value: "1dd94577be1ccade99811a50934175c9a233e9fdaebf9b0c140e8473535a217f3bfeb85148f33319e3cfb412e9b887c0b388386f011c35d738d3df033706d64f"
+
+            - name: SONAR_TOKEN
+              value: "sqp_fadcff67dcae94770ba78218d395a28ef52fefc4"
