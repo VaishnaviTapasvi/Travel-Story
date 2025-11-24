@@ -6,7 +6,6 @@ apiVersion: v1
 kind: Pod
 spec:
   containers:
-
   - name: node
     image: node:18
     command: ['cat']
@@ -30,11 +29,10 @@ spec:
       subPath: kubeconfig
 
   - name: dind
-  image: docker:dind
-  args:
+    image: docker:dind
+    args:
     - "--storage-driver=overlay2"
     - "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
-
     securityContext:
       privileged: true
     env:
@@ -45,6 +43,7 @@ spec:
   - name: kubeconfig-secret
     secret:
       secretName: kubeconfig-secret
+
 '''
         }
     }
