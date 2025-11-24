@@ -92,36 +92,35 @@ spec:
               DOCKER BUILD + PUSH (using Nexus)
            =============================== */
         stage('Build, Tag & Push Docker Images') {
-    steps {
-        container('dind') {
-            withCredentials([usernamePassword(
-                credentialsId: 'c2128831-c677-4256-ae1b-32fc6d2c47ec',
-                usernameVariable: 'NEXUS_USER',
-                passwordVariable: 'NEXUS_PASS'
-            )]) {
-                sh '''
-                set -euo pipefail
+  steps {
+    container('dind') {
+      withCredentials([usernamePassword(credentialsId: 'c2128831-c677-4256-ae1b-32fc6d2c47ec',
+                                        usernameVariable: 'NEXUS_USER',
+                                        passwordVariable: 'NEXUS_PASS')]) {
+        sh '''
+        set -euo pipefail
 
-                echo "=== Docker Daemon Status ==="
-                docker info
+        echo "=== Docker Daemon Status ==="
+        docker info
 
-                echo "=== Login to Nexus registry ==="
-                docker login ${NEXUS_REGISTRY} -u "$NEXUS_USER" -p "$NEXUS_PASS"
+        echo "=== Login to Nexus (use stdin for security) ==="
+        echo "$NEXUS_PASS" | docker login ${NEXUS_REGISTRY} -u "$NEXUS_USER" --password-stdin
 
-                echo "=== Build frontend image ==="
-                docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${FRONTEND_IMAGE} frontend/
+        echo "=== Build frontend image ==="
+        docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${FRONTEND_IMAGE} frontend/
 
-                echo "=== Build backend image ==="
-                docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${BACKEND_IMAGE} backend/
+        echo "=== Build backend image ==="
+        docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${BACKEND_IMAGE} backend/
 
-                echo "=== Push images to Nexus ==="
-                docker push ${FRONTEND_IMAGE}
-                docker push ${BACKEND_IMAGE}
-                '''
-            }
-        }
+        echo "=== Push images to Nexus ==="
+        docker push ${FRONTEND_IMAGE}
+        docker push ${BACKEND_IMAGE}
+        '''
+      }
     }
+  }
 }
+
 
         /* ===============================
               SONARQUBE SCAN (secure token)
