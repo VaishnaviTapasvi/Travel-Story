@@ -50,7 +50,7 @@ spec:
 
     environment {
         // Nexus registry hostname (used repeatedly) — edit if your env differs
-        NEXUS_REGISTRY = "http://nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
+        NEXUS_REGISTRY = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
         APP_NAMESPACE  = "2401198"
         FRONTEND_IMAGE = "${NEXUS_REGISTRY}/2401198/travelstory-frontend:v1"
         BACKEND_IMAGE  = "${NEXUS_REGISTRY}/2401198/travelstory-backend:v1"
@@ -107,6 +107,7 @@ spec:
 
         echo "=== Login to Nexus (use stdin for security) ==="
         echo "$NEXUS_PASS" | docker login $NEXUS_REGISTRY -u "$NEXUS_USER" --password-stdin
+
 
 
         echo "=== Build frontend image ==="
