@@ -92,43 +92,36 @@ spec:
               DOCKER BUILD + PUSH (using Nexus)
            =============================== */
         stage('Build, Tag & Push Docker Images') {
-            steps {
-                container('dind') {
-                    // Use credentials stored in Jenkins (username/password)
-                    withCredentials([usernamePassword(credentialsId: 'c2128831-c677-4256-ae1b-32fc6d2c47ec', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                        sh '''
-                        set -euo pipefail
-                        echo "=== Configure Docker daemon to allow insecure Nexus (HTTP) registry ==="
-                        mkdir -p /etc/docker
-                        cat > /etc/docker/daemon.json <<'EOF'
-                        {
-                          "insecure-registries": ["${NEXUS_REGISTRY}"]
-                        }
-EOF
-                        # restart dockerd inside the dind container
-                        pkill dockerd || true
-                        nohup dockerd --host=unix:///var/run/docker.sock --storage-driver=overlay2 >/tmp/dockerd.log 2>&1 &
-                        sleep 8
+    steps {
+        container('dind') {
+            withCredentials([usernamePassword(
+                credentialsId: 'c2128831-c677-4256-ae1b-32fc6d2c47ec',
+                usernameVariable: 'NEXUS_USER',
+                passwordVariable: 'NEXUS_PASS'
+            )]) {
+                sh '''
+                set -euo pipefail
 
-                        echo "=== Login to Nexus registry ==="
-                        docker login ${NEXUS_REGISTRY} -u "$NEXUS_USER" -p "$NEXUS_PASS"
+                echo "=== Docker Daemon Status ==="
+                docker info
 
-                        echo "=== Build frontend image from frontend/ (using NODE base from Nexus) ==="
-                        docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${FRONTEND_IMAGE} frontend/
+                echo "=== Login to Nexus registry ==="
+                docker login ${NEXUS_REGISTRY} -u "$NEXUS_USER" -p "$NEXUS_PASS"
 
-                        echo "=== Build backend image from backend/ (using NODE base from Nexus) ==="
-                        docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${BACKEND_IMAGE} backend/
+                echo "=== Build frontend image ==="
+                docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${FRONTEND_IMAGE} frontend/
 
-                        echo "=== Push frontend image ==="
-                        docker push ${FRONTEND_IMAGE}
+                echo "=== Build backend image ==="
+                docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${BACKEND_IMAGE} backend/
 
-                        echo "=== Push backend image ==="
-                        docker push ${BACKEND_IMAGE}
-                        '''
-                    }
-                }
+                echo "=== Push images to Nexus ==="
+                docker push ${FRONTEND_IMAGE}
+                docker push ${BACKEND_IMAGE}
+                '''
             }
         }
+    }
+}
 
         /* ===============================
               SONARQUBE SCAN (secure token)
