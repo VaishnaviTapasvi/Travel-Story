@@ -1,4 +1,5 @@
-FROM node:18
+FROM nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/library/node:18
+
 
 WORKDIR /app
 
