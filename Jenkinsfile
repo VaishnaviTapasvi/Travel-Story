@@ -95,7 +95,7 @@ spec:
             steps {
                 container('dind') {
                     // Use credentials stored in Jenkins (username/password)
-                    withCredentials([usernamePassword(credentialsId: 'nexus-docker-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    withCredentials([usernamePassword(credentialsId: 'c2128831-c677-4256-ae1b-32fc6d2c47ec', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                         sh '''
                         set -euo pipefail
                         echo "=== Configure Docker daemon to allow insecure Nexus (HTTP) registry ==="
