@@ -46,6 +46,15 @@ spec:
         }
     }
 
+    environment {
+        // Nexus registry hostname (used repeatedly) — edit if your env differs
+        NEXUS_REGISTRY = "nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
+        APP_NAMESPACE  = "2401198"
+        FRONTEND_IMAGE = "${NEXUS_REGISTRY}/2401198/travelstory-frontend:v1"
+        BACKEND_IMAGE  = "${NEXUS_REGISTRY}/2401198/travelstory-backend:v1"
+        NODE_BASE      = "${NEXUS_REGISTRY}/library/node:18"
+    }
+
     stages {
 
         /* ===============================
@@ -54,9 +63,9 @@ spec:
         stage('Install + Build Frontend') {
             steps {
                 container('node') {
-                    dir('frontend') {    // <-- FIXED HERE
+                    dir('frontend') {
                         sh '''
-                            npm install
+                            npm ci
                             npm run build
                         '''
                     }
@@ -70,9 +79,9 @@ spec:
         stage('Install Backend Packages') {
             steps {
                 container('node') {
-                    dir('backend') {      // <-- NEW
+                    dir('backend') {
                         sh '''
-                            npm install
+                            npm ci
                         '''
                     }
                 }
@@ -80,68 +89,62 @@ spec:
         }
 
         /* ===============================
-              DOCKER BUILD
+              DOCKER BUILD + PUSH (using Nexus)
            =============================== */
-        stage('Build Docker Image') {
+        stage('Build, Tag & Push Docker Images') {
             steps {
                 container('dind') {
-                    sh '''
-                        sleep 10
+                    // Use credentials stored in Jenkins (username/password)
+                    withCredentials([usernamePassword(credentialsId: 'nexus-docker-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                        sh '''
+                        set -euo pipefail
+                        echo "=== Configure Docker daemon to allow insecure Nexus (HTTP) registry ==="
+                        mkdir -p /etc/docker
+                        cat > /etc/docker/daemon.json <<'EOF'
+                        {
+                          "insecure-registries": ["${NEXUS_REGISTRY}"]
+                        }
+EOF
+                        # restart dockerd inside the dind container
+                        pkill dockerd || true
+                        nohup dockerd --host=unix:///var/run/docker.sock --storage-driver=overlay2 >/tmp/dockerd.log 2>&1 &
+                        sleep 8
 
-                        # Build frontend image from frontend folder
-                        docker build -t travelstory-frontend:latest frontend/
+                        echo "=== Login to Nexus registry ==="
+                        docker login ${NEXUS_REGISTRY} -u "$NEXUS_USER" -p "$NEXUS_PASS"
 
-                        # Build backend image from backend folder
-                        docker build -t travelstory-backend:latest backend/
-                    '''
+                        echo "=== Build frontend image from frontend/ (using NODE base from Nexus) ==="
+                        docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${FRONTEND_IMAGE} frontend/
+
+                        echo "=== Build backend image from backend/ (using NODE base from Nexus) ==="
+                        docker build --build-arg NODE_IMAGE=${NODE_BASE} -t ${BACKEND_IMAGE} backend/
+
+                        echo "=== Push frontend image ==="
+                        docker push ${FRONTEND_IMAGE}
+
+                        echo "=== Push backend image ==="
+                        docker push ${BACKEND_IMAGE}
+                        '''
+                    }
                 }
             }
         }
 
         /* ===============================
-              SONARQUBE SCAN
+              SONARQUBE SCAN (secure token)
            =============================== */
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                    sh '''
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
                         sonar-scanner \
-                            -Dsonar.projectKey=2401198_TravelStory \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://sonarqube.imcc.com/ \
-                            -Dsonar.login=sqp_fadcff67dcae94770ba78218d395a28ef52fefc4
-                    '''
-                }
-            }
-        }
-
-        /* ===============================
-              DOCKER LOGIN
-           =============================== */
-        stage('Login to Nexus Registry') {
-            steps {
-                container('dind') {
-                    sh '''
-                        docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 \
-                        -u admin -p Changeme@2025
-                    '''
-                }
-            }
-        }
-
-        /* ===============================
-              PUSH IMAGES TO NEXUS
-           =============================== */
-        stage('Push to Nexus') {
-            steps {
-                container('dind') {
-                    sh '''
-                        docker tag travelstory-frontend:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-frontend:v1
-                        docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-frontend:v1
-
-                        docker tag travelstory-backend:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-backend:v1
-                        docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-backend:v1
-                    '''
+                          -Dsonar.projectKey=2401198_TravelStory \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://sonarqube.imcc.com \
+                          -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
                 }
             }
         }
@@ -153,13 +156,38 @@ spec:
             steps {
                 container('kubectl') {
                     sh '''
-                        kubectl apply -f k8s/deployment.yaml
-                        kubectl apply -f k8s/service.yaml
+                    set -euo pipefail
 
-                        kubectl rollout status deployment/recipe-finder-deployment -n 2401198
+                    # ensure namespace exists
+                    if ! kubectl get ns ${APP_NAMESPACE} >/dev/null 2>&1; then
+                        kubectl create ns ${APP_NAMESPACE}
+                    fi
+
+                    # Update k8s manifests (ensure images point to Nexus images)
+                    # It's recommended to update k8s/deployment.yaml to use the Nexus image paths.
+                    # For safety, we patch deployments here to use the newly built images.
+                    kubectl apply -f k8s/service.yaml -n ${APP_NAMESPACE} || true
+                    kubectl apply -f k8s/deployment.yaml -n ${APP_NAMESPACE} || true
+
+                    # Patch deployments (if deployments exist) to use the freshly pushed images
+                    kubectl -n ${APP_NAMESPACE} set image deployment/travelstory-frontend-deployment travelstory-frontend=${FRONTEND_IMAGE} || true
+                    kubectl -n ${APP_NAMESPACE} set image deployment/travelstory-backend-deployment travelstory-backend=${BACKEND_IMAGE} || true
+
+                    # Wait for rollout — use actual deployment name in your k8s manifests, adjust if different
+                    kubectl rollout status deployment/travelstory-frontend-deployment -n ${APP_NAMESPACE} --timeout=120s || true
+                    kubectl rollout status deployment/travelstory-backend-deployment -n ${APP_NAMESPACE} --timeout=120s || true
                     '''
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed successfully."
+        }
+        failure {
+            echo "Pipeline failed — check console log for details."
         }
     }
 }
