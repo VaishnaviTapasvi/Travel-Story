@@ -61,18 +61,16 @@ spec:
             }
         }
 
-        stage('Install + Build Backend') {
-            steps {
-                container('node') {
-                    dir('backend') {   // <-- backend folder
-                        sh '''
-                            npm install
-                            npm run build  # if backend has a build script
-                        '''
-                    }
-                }
+        stage('Install Backend Dependencies') {
+    steps {
+        container('node') {
+            dir('backend') {
+                sh 'npm install'
             }
         }
+    }
+}
+
 
         stage('Build Docker Images') {
             steps {
