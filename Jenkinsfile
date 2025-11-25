@@ -18,16 +18,20 @@ spec:
     tty: true
 
  - name: kubectl
-   image: bitnami/kubectl:latest
-   command: ['cat']
-   tty: true
-   env:
-  - name: KUBECONFIG
-    value: /kube/config
-  volumeMounts:
-  - name: kubeconfig-secret
-    mountPath: /kube/config
-    subPath: kubeconfig
+    image: bitnami/kubectl:latest
+    command: ['cat']
+    tty: true
+    securityContext:
+    runAsUser: 0
+    readOnlyRootFilesystem: false
+
+    env:
+    - name: KUBECONFIG
+      value: /kube/config
+    volumeMounts:
+    - name: kubeconfig-secret
+      mountPath: /kube/config
+      subPath: kubeconfig
 
 
 
