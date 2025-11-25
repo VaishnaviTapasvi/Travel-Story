@@ -17,37 +17,39 @@ spec:
     command: ['cat']
     tty: true
 
- - name: kubectl
+  - name: kubectl
     image: bitnami/kubectl:latest
-    command: ['cat']
+    command:
+      - /bin/sh
+      - -c
+      - sleep infinity
     tty: true
     securityContext:
-    runAsUser: 0
-    readOnlyRootFilesystem: false
-
+      runAsUser: 0
+      readOnlyRootFilesystem: false
     env:
-    - name: KUBECONFIG
-      value: /kube/config
+      - name: KUBECONFIG
+        value: /kube/config
     volumeMounts:
-    - name: kubeconfig-secret
-      mountPath: /kube/config
-      subPath: kubeconfig
-
-
+      - name: kubeconfig-secret
+        mountPath: /kube/config
+        subPath: kubeconfig
 
   - name: dind
     image: docker:dind
-    args: ["--storage-driver=overlay2", "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"]
+    args:
+      - "--storage-driver=overlay2"
+      - "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"
     securityContext:
       privileged: true
     env:
-    - name: DOCKER_TLS_CERTDIR
-      value: ""
+      - name: DOCKER_TLS_CERTDIR
+        value: ""
 
   volumes:
-  - name: kubeconfig-secret
-    secret:
-      secretName: kubeconfig-secret
+    - name: kubeconfig-secret
+      secret:
+        secretName: kubeconfig-secret
 '''
         }
     }
