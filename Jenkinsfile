@@ -37,6 +37,7 @@ spec:
     env:
     - name: DOCKER_TLS_CERTDIR
       value: ""
+
   volumes:
   - name: kubeconfig-secret
     secret:
@@ -50,21 +51,36 @@ spec:
         stage('Install + Build Frontend') {
             steps {
                 container('node') {
-                    sh '''
-                        npm install
-                        npm run build
-                    '''
+                    dir('frontend') {   // <-- frontend folder
+                        sh '''
+                            npm install
+                            npm run build
+                        '''
+                    }
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Install + Build Backend') {
+            steps {
+                container('node') {
+                    dir('backend') {   // <-- backend folder
+                        sh '''
+                            npm install
+                            npm run build  # if backend has a build script
+                        '''
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
             steps {
                 container('dind') {
                     sh '''
                         sleep 10
-                        docker build -t travelstory-frontend:latest .
-                        docker build -t travelstory-backend:latest .
+                        docker build -t travelstory-frontend:latest ./frontend
+                        docker build -t travelstory-backend:latest ./backend
                     '''
                 }
             }
@@ -73,17 +89,18 @@ spec:
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                    sh '''
-                        sonar-scanner \
-                            -Dsonar.projectKey=2401198_TravelStory \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://sonarqube.imcc.com/ \
-                            -Dsonar.login=sqp_fadcff67dcae94770ba78218d395a28ef52fefc4
-                    '''
+                    dir('backend') {  // analyzing backend code
+                        sh '''
+                            sonar-scanner \
+                                -Dsonar.projectKey=2401198_TravelStory \
+                                -Dsonar.sources=. \
+                                -Dsonar.host.url=http://sonarqube.imcc.com/ \
+                                -Dsonar.login=sqp_fadcff67dcae94770ba78218d395a28ef52fefc4
+                        '''
+                    }
                 }
             }
         }
-
 
         stage('Login to Nexus Registry') {
             steps {
@@ -95,13 +112,13 @@ spec:
             }
         }
 
-
         stage('Push to Nexus') {
             steps {
                 container('dind') {
                     sh '''
                         docker tag travelstory-frontend:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-frontend:v1
                         docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-frontend:v1
+
                         docker tag travelstory-backend:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-backend:v1
                         docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-backend:v1
                     '''
@@ -115,7 +132,6 @@ spec:
                     sh '''
                         kubectl apply -f k8s/deployment.yaml
                         kubectl apply -f k8s/service.yaml
-
                         kubectl rollout status deployment/travelstory-deployment -n 2401198
                     '''
                 }
