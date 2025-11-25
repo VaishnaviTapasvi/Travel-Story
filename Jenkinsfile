@@ -18,16 +18,20 @@ spec:
     tty: true
 
   - name: kubectl
-    image: bitnami/kubectl:latest
-    command: ['cat']
-    tty: true
-    env:
+  image: bitnami/kubectl:latest
+  command:
+    - "/bin/sh"
+    - "-c"
+    - "sleep infinity"
+  tty: true
+  env:
     - name: KUBECONFIG
       value: /kube/config
-    volumeMounts:
+  volumeMounts:
     - name: kubeconfig-secret
       mountPath: /kube/config
       subPath: kubeconfig
+
 
   - name: dind
     image: docker:dind
