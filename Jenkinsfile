@@ -92,7 +92,7 @@ spec:
                             sonar-scanner \
                                 -Dsonar.projectKey=2401198_TravelStory \
                                 -Dsonar.sources=. \
-                                -Dsonar.host.url=http://sonarqube.imcc.com/ \
+                                -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
                                 -Dsonar.login=sqp_fadcff67dcae94770ba78218d395a28ef52fefc4
                         '''
                     }
