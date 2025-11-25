@@ -8,7 +8,7 @@ spec:
   containers:
 
   - name: node
-    image: node:18
+    image: node:20
     command: ['cat']
     tty: true
 
