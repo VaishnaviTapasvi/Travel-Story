@@ -168,15 +168,22 @@ spec:
            KUBERNETES DEPLOYMENT
         -------------------------- */
         stage('Deploy to Kubernetes') {
-            steps {
-                container('kubectl') {
-                    sh '''
-                        kubectl apply -f k8s/deployment.yaml
-                        kubectl apply -f k8s/service.yaml
-                        kubectl rollout status deployment/travelstory-deployment -n 2401198
-                    '''
-                }
-            }
+    steps {
+        container('kubectl') {
+            sh '''
+                echo "Ensuring namespace exists..."
+                kubectl get ns 2401198 || kubectl create ns 2401198
+
+                echo "Applying deployment and service..."
+                kubectl apply -f k8s/deployment.yaml -n 2401198
+                kubectl apply -f k8s/service.yaml -n 2401198
+
+                echo "Checking rollout status..."
+                kubectl rollout status deployment/travelstory-deployment -n 2401198
+            '''
         }
+    }
+}
+
     }
 }
