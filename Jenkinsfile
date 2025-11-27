@@ -56,12 +56,27 @@ spec:
 
     stages {
 
+        /* -------------------------
+           FRONTEND BUILD
+        -------------------------- */
         stage('Install + Build Frontend') {
             steps {
                 container('node') {
-                    dir('frontend') {   // <-- frontend folder
+                    dir('frontend') {
                         sh '''
-                            npm install
+                            echo "Cleaning old npm cache..."
+                            npm cache clean --force
+
+                            echo "Removing node_modules & lock file..."
+                            rm -rf node_modules package-lock.json
+
+                            echo "Installing dependencies..."
+                            npm install --legacy-peer-deps
+
+                            echo "Installing Vite globally..."
+                            npm install -g vite
+
+                            echo "Running Vite build..."
                             npm run build
                         '''
                     }
@@ -69,17 +84,24 @@ spec:
             }
         }
 
+        /* -------------------------
+           BACKEND INSTALL
+        -------------------------- */
         stage('Install Backend Dependencies') {
-    steps {
-        container('node') {
-            dir('backend') {
-                sh 'npm install'
+            steps {
+                container('node') {
+                    dir('backend') {
+                        sh '''
+                            npm install
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
-
+        /* -------------------------
+           BUILD DOCKER IMAGES
+        -------------------------- */
         stage('Build Docker Images') {
             steps {
                 container('dind') {
@@ -92,10 +114,13 @@ spec:
             }
         }
 
+        /* -------------------------
+           SONARQUBE ANALYSIS
+        -------------------------- */
         stage('SonarQube Analysis') {
             steps {
                 container('sonar-scanner') {
-                    dir('backend') {  // analyzing backend code
+                    dir('backend') {
                         sh '''
                             sonar-scanner \
                                 -Dsonar.projectKey=2401198_TravelStory \
@@ -108,16 +133,23 @@ spec:
             }
         }
 
+        /* -------------------------
+           LOGIN TO NEXUS
+        -------------------------- */
         stage('Login to Nexus Registry') {
             steps {
                 container('dind') {
                     sh '''
-                        docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 -u admin -p Changeme@2025
+                        docker login nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085 \
+                        -u admin -p Changeme@2025
                     '''
                 }
             }
         }
 
+        /* -------------------------
+           PUSH IMAGES TO NEXUS
+        -------------------------- */
         stage('Push to Nexus') {
             steps {
                 container('dind') {
@@ -132,6 +164,9 @@ spec:
             }
         }
 
+        /* -------------------------
+           KUBERNETES DEPLOYMENT
+        -------------------------- */
         stage('Deploy to Kubernetes') {
             steps {
                 container('kubectl') {
