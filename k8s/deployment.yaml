@@ -14,11 +14,12 @@ spec:
         app: travelstory
     spec:
       containers:
-        - name: travelstory
+        - name: travelstory-frontend
           image: nexus.imcc.com:8082/2401198/travelstory-frontend:v1
           ports:
             - containerPort: 80
-        - name: travelstory
+
+        - name: travelstory-backend
           image: nexus.imcc.com:8082/2401198/travelstory-backend:v1
           ports:
             - containerPort: 5000
