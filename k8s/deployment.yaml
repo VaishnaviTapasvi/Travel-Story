@@ -19,25 +19,23 @@ spec:
       containers:
         - name: travelstory-frontend
           image: 127.0.0.1:30085/2401198/travelstory-frontend:v1
-          imagePullPolicy: Always
           ports:
             - containerPort: 80
           readinessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 80
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 80
             initialDelaySeconds: 30
             periodSeconds: 10
 
         - name: travelstory-backend
           image: 127.0.0.1:30085/2401198/travelstory-backend:v1
-          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           env:
@@ -53,13 +51,13 @@ spec:
                   key: jwt_secret
           readinessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 5000
             initialDelaySeconds: 5
             periodSeconds: 5
           livenessProbe:
             httpGet:
-              path: /health
+              path: /
               port: 5000
             initialDelaySeconds: 30
             periodSeconds: 10
