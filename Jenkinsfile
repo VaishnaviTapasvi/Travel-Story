@@ -150,29 +150,15 @@ spec:
             steps {
                 container('dind') {
                     sh '''
-                        docker tag travelstory-frontend:latest \
-                 nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/repository/2401198/travelstory-frontend:v1
+                        docker tag travelstory-frontend:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-frontend:v1
+                        docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-frontend:v1
 
-               docker tag travelstory-backend:latest \
-               nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/repository/2401198/travelstory-backend:v1
-
-               docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/repository/2401198/travelstory-frontend:v1
-
-               docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/repository/2401198/travelstory-backend:v1
+                        docker tag travelstory-backend:latest nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-backend:v1
+                        docker push nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-backend:v1
                     '''
                 }
             }
         }
-
-        stage('Check Nexus Services') {
-    steps {
-        container('kubectl') {
-            sh 'kubectl get svc -A'
-        }
-    }
-}
-
-
 
         /* -------------------------
            KUBERNETES DEPLOYMENT
