@@ -13,20 +13,28 @@ spec:
       labels:
         app: travelstory
     spec:
-      containers:
+      imagePullSecrets:
+        - name: nexus-credentials
 
-        # -----------------------------
-        # FRONTEND CONTAINER
-        # -----------------------------
+      containers:
         - name: travelstory-frontend
           image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-frontend:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
 
-        # -----------------------------
-        # BACKEND CONTAINER
-        # -----------------------------
         - name: travelstory-backend
           image: nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085/2401198/travelstory-backend:v1
           imagePullPolicy: Always
@@ -34,10 +42,24 @@ spec:
             - containerPort: 5000
           env:
             - name: MONGO_URL
-              value: "mongodb+srv://vaishnavitapasvi:alohomora@travelstory.7r8gs.mongodb.net/?retryWrites=true&w=majority&appName=travelstory"
-
+              valueFrom:
+                secretKeyRef:
+                  name: travelstory-secret
+                  key: mongo_url
             - name: JWT_SECRET
-              value: "1dd94577be1ccade99811a50934175c9a233e9fdaebf9b0c140e8473535a217f3bfeb85148f33319e3cfb412e9b887c0b388386f011c35d738d3df033706d64f"
-
-            - name: SONAR_TOKEN
-              value: "sqp_fadcff67dcae94770ba78218d395a28ef52fefc4"
+              valueFrom:
+                secretKeyRef:
+                  name: travelstory-secret
+                  key: jwt_secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 10
