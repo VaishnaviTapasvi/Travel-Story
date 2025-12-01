@@ -5,7 +5,7 @@ const { authenticateToken } = require("../utilities");
 
 
 // Get all travel stories of all users
-router.get("/view-stories", async (req, res) => {
+router.get("/api/view-stories", async (req, res) => {
     try {
         const stories = await TravelStory.find({})
         res.status(200).json({ success: true, stories });
@@ -17,7 +17,7 @@ router.get("/view-stories", async (req, res) => {
 
 
 // Create a new travel story
-router.post("/", authenticateToken,async (req, res) => {
+router.post("/api/", authenticateToken,async (req, res) => {
     try {
         const { title, details, images, itinerary, userId } = req.body;
         const newStory = new TravelStory({ title, details, images, itinerary, userId });
@@ -30,7 +30,7 @@ router.post("/", authenticateToken,async (req, res) => {
 
 
 // Get a specific travel story
-router.get("/:id", authenticateToken,async (req, res) => {
+router.get("/api/:id", authenticateToken,async (req, res) => {
     try {
         const story = await TravelStory.findById(req.params.id);
         if (!story) return res.status(404).json({ error: "Story not found" });
@@ -41,7 +41,7 @@ router.get("/:id", authenticateToken,async (req, res) => {
 });
 
 // Update a travel story
-router.put("/:id", authenticateToken,async (req, res) => {
+router.put("/api/:id", authenticateToken,async (req, res) => {
     try {
         const updatedStory = await TravelStory.findByIdAndUpdate(req.params.id, req.body, { new: true });
         if (!updatedStory) return res.status(404).json({ error: "Story not found" });
@@ -52,7 +52,7 @@ router.put("/:id", authenticateToken,async (req, res) => {
 });
 
 // Delete a travel story
-router.delete("/:id", authenticateToken,async (req, res) => {
+router.delete("/api/:id", authenticateToken,async (req, res) => {
     try {
         const deletedStory = await TravelStory.findByIdAndDelete(req.params.id);
         if (!deletedStory) return res.status(404).json({ error: "Story not found" });
@@ -63,7 +63,7 @@ router.delete("/:id", authenticateToken,async (req, res) => {
 });
 
 // Like a story
-router.post("/travel-stories/:id/like", async (req, res) => {
+router.post("/api/travel-stories/:id/like", async (req, res) => {
     try {
         const story = await TravelStory.findById(req.params.id);
         if (!story) return res.status(404).json({ message: "Story not found" });

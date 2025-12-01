@@ -4,7 +4,7 @@ const TravelStory = require("../models/travelStory.model");  // Import Story Mod
 const { authenticateToken } = require('../utilities');
 
 // Get all travel stories
-router.get("/view-stories",authenticateToken, async (req, res) => {
+router.get("/api/view-stories",authenticateToken, async (req, res) => {
     try {
         const stories = await TravelStory.find().sort({ createdAt: -1 });
         res.json(stories);

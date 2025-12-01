@@ -8,16 +8,14 @@ spec:
     app: travelstory
   ports:
     - name: frontend
+      protocol: TCP
       port: 80
       targetPort: 80
-      protocol: TCP
-
     - name: backend
+      protocol: TCP
       port: 5000
       targetPort: 5000
-      protocol: TCP
-
-  type: ClusterIP
+  type: LoadBalancer
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -25,14 +23,14 @@ metadata:
   name: travelstory-ingress
   namespace: "2401198"
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
   rules:
     - host: travelstory.imcc.com
       http:
         paths:
-          - path: /(.*)
+          - path: /
             pathType: Prefix
             backend:
               service:
@@ -40,7 +38,7 @@ spec:
                 port:
                   number: 80
 
-          - path: /api(/|$)(.*)
+          - path: /api
             pathType: Prefix
             backend:
               service:
