@@ -9,7 +9,7 @@ const CreateStory = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await axios.post("http://localhost:5000/api/stories", { title, details, itinerary });
+            await axios.post("http://travelstory.imcc.com/api/stories", { title, details, itinerary });
             alert("Story added successfully!");
         } catch (error) {
             console.error("Failed to create story", error);

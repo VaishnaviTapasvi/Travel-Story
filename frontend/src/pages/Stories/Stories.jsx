@@ -5,7 +5,7 @@ const Stories = () => {
     const [stories, setStories] = useState([]);
 
     useEffect(() => {
-        axios.get("http://localhost:5000/api/stories")
+        axios.get("http://travelstory.imcc.com/api/stories")
             .then(res => setStories(res.data))
             .catch(err => console.error(err));
     }, []);
