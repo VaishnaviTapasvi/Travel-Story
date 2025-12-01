@@ -7,8 +7,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-
-backend/.env
 backend/uploads
 
 node_modules/
