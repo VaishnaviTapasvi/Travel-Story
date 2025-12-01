@@ -53,7 +53,7 @@ const SignUp = () => {
        ){
         setError(error.response.data.message);
        } else{
-        setError(error.response.data.message);
+        setError("An unexpected error occurred");
        }
     }
     };
