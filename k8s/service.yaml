@@ -8,14 +8,16 @@ spec:
     app: travelstory
   ports:
     - name: frontend
-      protocol: TCP
       port: 80
       targetPort: 80
-    - name: backend
       protocol: TCP
+
+    - name: backend
       port: 5000
       targetPort: 5000
-  type: LoadBalancer
+      protocol: TCP
+
+  type: ClusterIP
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -37,6 +39,7 @@ spec:
                 name: travelstory-service
                 port:
                   number: 80
+
           - path: /api
             pathType: Prefix
             backend:
