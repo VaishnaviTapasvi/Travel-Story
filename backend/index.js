@@ -413,6 +413,10 @@ app.get("/travel-stories/filter_home", async(req, res)=>{
 }
 });
 
+// Health check route
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
 
 
 //app.listen(8000);
