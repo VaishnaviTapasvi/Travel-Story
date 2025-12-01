@@ -21,9 +21,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: travelstory-ingress
-  namespace: "2401198"
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+  namespace: "2401198" 
 spec:
   ingressClassName: nginx
   rules:

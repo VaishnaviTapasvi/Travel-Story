@@ -37,7 +37,7 @@ app.use("/api/stories", displayStoryRoutes);
 
 
 //Create Account
-app.post("/create-account", async(req, res)=>{
+app.post("/api/create-account", async(req, res)=>{
     const {fullName, email, password } = req.body;
 
     if(!fullName || !email || !password){
@@ -76,7 +76,7 @@ app.post("/create-account", async(req, res)=>{
 });
 
 //Login
-app.post("/login", async(req, res)=>{
+app.post("/api/login", async(req, res)=>{
     const {email, password} = req.body;
     if(!email || !password){
         return res.status(400).json({message: "Email and Password are required"});
@@ -105,7 +105,7 @@ app.post("/login", async(req, res)=>{
 });
 
 //Get user
-app.get("/get-user", authenticateToken, async(req, res)=>{
+app.get("/api/get-user", authenticateToken, async(req, res)=>{
     const {userId} = req.user
     const isUser= await User.findOne({_id:userId});
     if(!isUser){
@@ -118,7 +118,7 @@ app.get("/get-user", authenticateToken, async(req, res)=>{
 })
 
 //Route to handle image upload
-app.post("/image-upload", upload.single("image"),async(req, res) =>{
+app.post("/api/image-upload", upload.single("image"),async(req, res) =>{
     try{
         if(!req.file){
             return res.status(400).json({error: true, message: "No image uploaded"});
@@ -132,7 +132,7 @@ app.post("/image-upload", upload.single("image"),async(req, res) =>{
 });
 
 //Delete an image from uploads folder
-app.delete("/delete-image", async(req, res) =>{  
+app.delete("/api/delete-image", async(req, res) =>{  
     const {imageUrl} = req.query;
 
     if(!imageUrl)
@@ -168,7 +168,7 @@ app.use("/uploads",express.static(path.join(__dirname,'uploads')));
 app.use("/assets",express.static(path.join(__dirname,'assets')));
 
 //Add Travel Story
-app.post("/add-travel-story", authenticateToken, async(req, res)=>{
+app.post("/api/add-travel-story", authenticateToken, async(req, res)=>{
     const {title, story, visitedLocation, imageUrl, visitedDate} = req.body;
     const {userId} = req.user
 
@@ -197,7 +197,7 @@ app.post("/add-travel-story", authenticateToken, async(req, res)=>{
 })
 
 //Get All Travel Stories
-app.get("/get-all-stories", async(req, res)=>{
+app.get("/api/get-all-stories", async(req, res)=>{
     // const {userId} = req.user;
     try{
         const travelStories = await TravelStory.find().sort({
@@ -210,7 +210,7 @@ app.get("/get-all-stories", async(req, res)=>{
 });
 
 //Edit Travel Story
-app.put("/edit-story/:id", authenticateToken, async(req, res)=>{
+app.put("/api/edit-story/:id", authenticateToken, async(req, res)=>{
     const {id} = req.params;
     const {title, story, visitedLocation, imageUrl, visitedDate} = req.body;
     const {userId} = req.user;
@@ -247,7 +247,7 @@ app.put("/edit-story/:id", authenticateToken, async(req, res)=>{
 });
 
 //Delete a travel story
-app.delete("/delete-story/:id", authenticateToken, async(req, res)=>{
+app.delete("/api/delete-story/:id", authenticateToken, async(req, res)=>{
     const {id} = req.params;
     const {userId} = req.user;
 
@@ -305,7 +305,7 @@ app.put("/update-is-favourite/:id", authenticateToken, async(req, res)=>{
 });*/
 
 //Like travel story without access token
-app.post("/travel-stories/:id/like", async(req, res)=>{
+app.post("/api/travel-stories/:id/like", async(req, res)=>{
     const {id} = req.params;
     try{
         //Find the travel story by ID
@@ -324,7 +324,7 @@ app.post("/travel-stories/:id/like", async(req, res)=>{
 
 
 //Search travel stories
-app.get("/search" ,async(req, res)=>{
+app.get("/api/search" ,async(req, res)=>{
     const {query}= req.query;
     // const {userId} = req.user;
 
@@ -345,7 +345,7 @@ app.get("/search" ,async(req, res)=>{
 });
 
 //Filter travel stories by date range
-app.get("/travel-stories/filter", async(req, res)=>{
+app.get("/api/travel-stories/filter", async(req, res)=>{
     const {startDate, endDate} = req.query;
     // const {userId} = req.user;
     try{
@@ -364,7 +364,7 @@ app.get("/travel-stories/filter", async(req, res)=>{
 });
 
 //Get All Travel Stories on Homepage
-app.get("/view-stories", async(req, res)=>{
+app.get("/api/view-stories", async(req, res)=>{
     try{
         const travelStories = await TravelStory.find().sort({
             isFavourite:-1,
@@ -376,7 +376,7 @@ app.get("/view-stories", async(req, res)=>{
 });
 
 //Search travel stories on homepage
-app.get("/search_home", async(req, res)=>{
+app.get("/api/search_home", async(req, res)=>{
     const {query}= req.query;
 
     if(!query){
@@ -396,7 +396,7 @@ app.get("/search_home", async(req, res)=>{
 });
 
 //Filter travel stories by date range on homepage
-app.get("/travel-stories/filter_home", async(req, res)=>{
+app.get("/api/travel-stories/filter_home", async(req, res)=>{
     const {startDate, endDate} = req.query;
     try{
         //Convert startDate and endDate from milliseconds to Date objects
