@@ -1,6 +1,0 @@
-projectKey=2401198_TravelStory
-serverUrl=http://sonarqube.imcc.com
-serverVersion=25.1.0.102122
-dashboardUrl=http://sonarqube.imcc.com/dashboard?id=2401198_TravelStory
-ceTaskId=21f2079c-ce1b-4405-b707-a8c7cb31b3c7
-ceTaskUrl=http://sonarqube.imcc.com/api/ce/task?id=21f2079c-ce1b-4405-b707-a8c7cb31b3c7

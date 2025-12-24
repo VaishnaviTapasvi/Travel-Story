@@ -98,7 +98,7 @@ spec:
                               -Dsonar.projectKey=2401198_TravelStory \
                               -Dsonar.sources=. \
                               -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
-                              -Dsonar.login=sqp_13f00abdb3efcdb76ca7f5af892e6ed6fa7d9a0c
+                              -Dsonar.login=sqp_924ab5a932c555253b4cd3c995acae52e8f824c8
                         '''
                     }
                 }
